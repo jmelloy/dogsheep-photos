@@ -206,11 +206,11 @@ def apple_photos(db_path, library, image_url_prefix, image_url_suffix):
     db.conn.execute(
         """
     create table apple_photos_scores as select
-        ZGENERICASSET.ZUUID,
-        ZGENERICASSET.ZOVERALLAESTHETICSCORE,
-        ZGENERICASSET.ZCURATIONSCORE,
-        ZGENERICASSET.ZPROMOTIONSCORE,
-        ZGENERICASSET.ZHIGHLIGHTVISIBILITYSCORE,
+        ZASSET.ZUUID,
+        ZASSET.ZOVERALLAESTHETICSCORE,
+        ZASSET.ZCURATIONSCORE,
+        ZASSET.ZPROMOTIONSCORE,
+        ZASSET.ZHIGHLIGHTVISIBILITYSCORE,
         ZCOMPUTEDASSETATTRIBUTES.ZBEHAVIORALSCORE,
         ZCOMPUTEDASSETATTRIBUTES.ZFAILURESCORE,
         ZCOMPUTEDASSETATTRIBUTES.ZHARMONIOUSCOLORSCORE,
@@ -235,9 +235,9 @@ def apple_photos(db_path, library, image_url_prefix, image_url_suffix):
         ZCOMPUTEDASSETATTRIBUTES.ZWELLFRAMEDSUBJECTSCORE,
         ZCOMPUTEDASSETATTRIBUTES.ZWELLTIMEDSHOTSCORE
     from
-        attached.ZGENERICASSET
+        attached.ZASSET
         join attached.ZCOMPUTEDASSETATTRIBUTES on
-            attached.ZGENERICASSET.Z_PK = attached.ZCOMPUTEDASSETATTRIBUTES.ZASSET;
+            attached.ZASSET.Z_PK = attached.ZCOMPUTEDASSETATTRIBUTES.ZASSET;
     """
     )
     db["apple_photos_scores"].create_index(["ZUUID"])
@@ -246,15 +246,7 @@ def apple_photos(db_path, library, image_url_prefix, image_url_suffix):
 
     with click.progressbar(photosdb.photos()) as photos:
         for photo in photos:
-            rows = list(db["uploads"].rows_where("filepath=?", [photo.path]))
-            if rows:
-                sha256 = rows[0]["sha256"]
-            else:
-                if photo.ismissing:
-                    print("Missing: {}".format(photo))
-                    continue
-                sha256 = calculate_hash(pathlib.Path(photo.path))
-            photo_row = osxphoto_to_row(sha256, photo)
+            photo_row = osxphoto_to_row(photo.path, photo)
             db["apple_photos"].insert(
                 photo_row, pk="uuid", replace=True, alter=True,
             )
