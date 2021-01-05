@@ -1,0 +1,6 @@
+sqlite-utils>=2.7
+boto3>=1.12.41
+osxphotos>=0.28.13
+datasette
+datasette-cluster-map
+datasette-vega
